@@ -1,5 +1,6 @@
-import { Button, Flex, Grid, Icon, Modal } from 'components/base'
+import { Button, Flex, Icon, Modal } from 'components/base'
 import { PlayerTypeSelect } from 'components/pages'
+import { useBooleanToggle } from 'hooks'
 
 import type { NextPage } from 'next'
 import { useState } from 'react'
@@ -9,9 +10,16 @@ import * as Styles from 'styles/Home'
 const Home: NextPage = () => {
   const [playerType, setPlayerType] = useState('x')
 
+  const [hasUser, toggleHasUser] = useBooleanToggle(true)
+
+
   return (
     <Styles.Main>
-      <Modal />
+      <Modal 
+        id="home" 
+        visible={hasUser} 
+        onClose={toggleHasUser} 
+      />
       <Styles.Container>
         <Flex flexDirection="column" gap={2}>
           <Flex gap={1} justifyContent="center">

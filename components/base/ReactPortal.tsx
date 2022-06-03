@@ -15,7 +15,7 @@ function ReactPortal({ children, wrapperId }: ReactPortalProps) {
   const element = document.getElementById(id) || createWrapperAndAppendToBody(wrapperId);
 
     setWrapperElement(element);
-    
+
     return () => {
       if (element.parentNode) element.parentNode.removeChild(element)
     };
