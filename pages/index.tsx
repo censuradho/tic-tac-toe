@@ -1,4 +1,4 @@
-import { Button, Flex, Grid, Icon } from 'components/base'
+import { Button, Flex, Grid, Icon, Modal } from 'components/base'
 import { PlayerTypeSelect } from 'components/pages'
 
 import type { NextPage } from 'next'
@@ -11,6 +11,7 @@ const Home: NextPage = () => {
 
   return (
     <Styles.Main>
+      <Modal />
       <Styles.Container>
         <Flex flexDirection="column" gap={2}>
           <Flex gap={1} justifyContent="center">
