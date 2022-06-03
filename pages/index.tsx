@@ -1,4 +1,4 @@
-import { Grid, Icon } from 'components/base'
+import { Button, Flex, Grid, Icon } from 'components/base'
 import { PlayerTypeSelect } from 'components/pages'
 
 import type { NextPage } from 'next'
@@ -12,22 +12,44 @@ const Home: NextPage = () => {
   return (
     <Styles.Main>
       <Styles.Container>
-        <Styles.PlayerSection>
-          <Styles.PlayerTitle>Pick player 1 mark</Styles.PlayerTitle>
-          <Styles.PlayerTypeContainer>
-            <PlayerTypeSelect
-              selected={playerType === '0'}
-              onSelect={() => setPlayerType('0')}
-              type="o" 
-            />
-            <PlayerTypeSelect 
-              selected={playerType === 'x'}
-              type="x"
-              onSelect={() => setPlayerType('x')}
-            />
-          </Styles.PlayerTypeContainer>
-          <Styles.PlayerDescription>Remember, x goes first</Styles.PlayerDescription>
-        </Styles.PlayerSection>
+        <Flex flexDirection="column" gap={2}>
+          <Flex gap={1} justifyContent="center">
+            <Icon name="x" color="primary" />
+            <Icon name="square" color="secondary" />
+          </Flex>
+          <Styles.PlayerSection>
+            <Styles.PlayerTitle>Pick player 1 is mark</Styles.PlayerTitle>
+            <Styles.PlayerTypeContainer>
+              <PlayerTypeSelect
+                selected={playerType === '0'}
+                onSelect={() => setPlayerType('0')}
+                type="o" 
+              />
+              <PlayerTypeSelect 
+                selected={playerType === 'x'}
+                type="x"
+                onSelect={() => setPlayerType('x')}
+              />
+            </Styles.PlayerTypeContainer>
+            <Styles.PlayerDescription>Remember, x goes first</Styles.PlayerDescription>
+          </Styles.PlayerSection>
+          <Flex
+            flexDirection="column"
+            gap={1}
+          >
+            <Button
+              variant="secondary"
+              fullWidth
+            >
+              New game (vs cpu)
+            </Button>
+            <Button
+              fullWidth
+            >
+              New game (vs player)
+            </Button>
+          </Flex>
+        </Flex>
       </Styles.Container>
     </Styles.Main>
   )
