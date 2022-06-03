@@ -7,7 +7,7 @@ import { useState } from 'react'
 import * as Styles from 'styles/Home'
 
 const Home: NextPage = () => {
-  const [playerType, setPlayerType] = useState('')
+  const [playerType, setPlayerType] = useState('x')
 
   return (
     <Styles.Main>
