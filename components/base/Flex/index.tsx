@@ -7,7 +7,8 @@ type Styles = Pick<CSSProperties,
   | 'alignItems'
   | 'justifyContent'
 > & { 
-  gap?: number 
+  gap?: number;
+  fullWidth?: boolean
 }
 
 interface FlexProps extends Styles {
@@ -17,6 +18,7 @@ interface FlexProps extends Styles {
 function BaseFlex ({
   children,
   gap,
+  fullWidth,
   ...props
 }: FlexProps) {
   return (
@@ -24,6 +26,7 @@ function BaseFlex ({
       style={{
         display: 'flex',
         gap: `${gap}rem`,
+        width: fullWidth ? '100%' : 'auto',
         ...props
       }}
     >

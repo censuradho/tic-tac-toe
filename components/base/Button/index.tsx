@@ -6,6 +6,7 @@ import * as Styles from './styles'
 type RootButtonAttr = Pick<ButtonHTMLAttributes<HTMLButtonElement>, 
   'onClick'
   | 'disabled'
+  | 'type'
 >
 
 type StylesVariant = VariantProps<typeof Styles.Button>

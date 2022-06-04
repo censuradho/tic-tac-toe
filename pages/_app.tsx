@@ -1,3 +1,4 @@
+import { GameProvider } from 'context'
 import type { AppProps } from 'next/app'
 import { useEffect } from 'react'
 
@@ -9,7 +10,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     globalStyle()
   }, [])
   
-  return <Component {...pageProps} />
+  return (
+    <GameProvider>
+      <Component {...pageProps} />
+    </GameProvider>
+  )
 }
 
 export default MyApp

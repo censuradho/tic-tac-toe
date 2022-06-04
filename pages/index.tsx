@@ -1,5 +1,6 @@
 import { Button, Flex, Icon, Modal } from 'components/base'
 import { PlayerInfoModal, PlayerTypeSelect } from 'components/pages'
+import { useGameContext } from 'context'
 import { useBooleanToggle } from 'hooks'
 
 import type { NextPage } from 'next'
@@ -8,10 +9,10 @@ import { useState } from 'react'
 import * as Styles from 'styles/Home'
 
 const Home: NextPage = () => {
+  const { data } = useGameContext()
   const [playerType, setPlayerType] = useState('x')
 
-  const [hasUser, setHasUser] = useState(true)
-
+  const [hasUser, setHasUser] = useState(!!data?.player1)
 
   return (
     <Styles.Main>

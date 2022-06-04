@@ -8,6 +8,7 @@ type IconProps = ComponentProps<typeof Icon>
 type RootButtonAttrs = Pick<ButtonHTMLAttributes<HTMLButtonElement>,
   'onClick'
   | 'disabled'
+  | 'type'
 >
 
 interface ButtonIconProps extends RootButtonAttrs {

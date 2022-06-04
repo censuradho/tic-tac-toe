@@ -11,10 +11,14 @@ export const Button = styled('button', {
   fontWeight: 'bold',
   transition: 0.2,
   
-  '&:hover': {
+  '&:hover, &:focus': {
     opacity: 0.8
   },
 
+  '&[disabled]': {
+    opacity: 0.5,
+    cursor: 'default'
+  },
   variants: {
     fullWidth: {
       true: {
