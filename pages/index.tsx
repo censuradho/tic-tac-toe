@@ -1,5 +1,5 @@
 import { Button, Flex, Icon, Modal } from 'components/base'
-import { PlayerTypeSelect } from 'components/pages'
+import { PlayerInfoModal, PlayerTypeSelect } from 'components/pages'
 import { useBooleanToggle } from 'hooks'
 
 import type { NextPage } from 'next'
@@ -10,15 +10,15 @@ import * as Styles from 'styles/Home'
 const Home: NextPage = () => {
   const [playerType, setPlayerType] = useState('x')
 
-  const [hasUser, toggleHasUser] = useBooleanToggle(true)
+  const [hasUser, setHasUser] = useState(true)
 
 
   return (
     <Styles.Main>
-      <Modal 
-        id="home" 
-        visible={hasUser} 
-        onClose={toggleHasUser} 
+      <PlayerInfoModal 
+        id="home"
+        visible={hasUser}
+        onClose={() => setHasUser(false)}
       />
       <Styles.Container>
         <Flex flexDirection="column" gap={2}>

@@ -1,6 +1,9 @@
 import { memo } from 'react'
 import type * as Stitches from '@stitches/react';
-
+import {
+  MdClose,
+} from '@meronex/icons/ios';
+import { IconType } from '@meronex/icons';
 
 import SquareIcon from 'assets/square.svg'
 
@@ -11,6 +14,7 @@ import { theme } from 'stitches.config'
 const icons = {
   square: SquareIcon,
   x: XIcon,
+  close: MdClose
 }
 
 export type IconNames = keyof typeof icons
@@ -28,12 +32,13 @@ function BaseIcon ({
   color = 'gray',
   size = 30
 }: IconProps) {
-  const Component = icons[name]
+  const Component = icons[name] as IconType | React.FC<React.SVGProps<SVGSVGElement>>
 
   return (
     <Component 
-      height={size} 
-      fill={theme.colors[color]}
+      height={size}
+      fill={theme.colors[color] as any}
+      size={size}
     />
   )
 }
