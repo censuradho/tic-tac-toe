@@ -8,19 +8,21 @@ interface ModalProps {
   visible?: boolean
   children?: ReactNode;
   onClose?: () => void;
-  id: string
+  id: string;
+  disabled?: boolean
 }
 
 function BaseModal ({
   children,
   onClose,
   visible,
-  id
+  id,
+  disabled
 }: ModalProps) {
 
   useEventListener('keydown', event => {
     const key = event.key
-    if (key === 'Escape') return onClose?.()
+    if (key === 'Escape' && !disabled) return onClose?.()
   })
 
   if (!visible) return null

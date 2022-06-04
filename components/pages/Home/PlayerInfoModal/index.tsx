@@ -1,13 +1,16 @@
-import { ButtonIcon, Flex, Modal } from 'components/base'
-import { ComponentProps, memo } from 'react'
+import { ButtonIcon, Flex, Modal, TextField } from 'components/base'
+import { ComponentProps, memo, useEffect, useRef } from 'react'
 
 import * as Styles from './styles'
 
-type ModalProps = Omit<ComponentProps<typeof Modal>, 'children'>
+type ModalProps = Omit<ComponentProps<typeof Modal>, 'children' | 'disabled'>
 
 interface PlayerInfoModalProps extends ModalProps {}
 
-function BasePlayerInfoModal ({ ...props }: PlayerInfoModalProps) {
+function BasePlayerInfoModal ({ 
+  ...props
+}: PlayerInfoModalProps) {
+
   return (
     <Modal
       {...props}
@@ -20,6 +23,11 @@ function BasePlayerInfoModal ({ ...props }: PlayerInfoModalProps) {
             icon={{ name: 'close' }} 
           />
         </Flex>
+        <TextField 
+          autoFocus
+          label="Nickname" 
+          id="nickname" 
+        />
       </Styles.Container>
     </Modal>
   )
