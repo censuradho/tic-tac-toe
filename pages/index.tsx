@@ -1,17 +1,17 @@
-import { Button, Flex, Icon, Modal } from 'components/base'
+import { Button, Flex, Icon } from 'components/base'
 import { PlayerTypeSelect } from 'components/pages'
 import { useGameContext } from 'context'
 
 import type { NextPage } from 'next'
-import { useState } from 'react'
+
 
 import * as Styles from 'styles/Home'
 import * as DefaultStyles from 'styles/Default'
-import { updatePlayer } from 'lib/firestore'
+import { updatePlayer, createPlayer } from 'lib/firestore'
 import { PlayerUpdateSchema } from 'types/game'
 
 const Home: NextPage = () => {
-  const { currentPlayer, data, setCurrentPlayer } = useGameContext()
+  const { currentPlayer, data, adversary } = useGameContext()
 
   const handleUpdatePlayerType = async (type: string) => {
     if (!currentPlayer || !data.game_id) return;
@@ -19,9 +19,24 @@ const Home: NextPage = () => {
     const player: PlayerUpdateSchema = {
       type
     }
-    
+
     await updatePlayer(data.game_id, currentPlayer?.id, player)
-    setCurrentPlayer(player)
+  }
+
+  const handleCreateVSCPU = async () => {
+    try {
+      if (!data.game_id) return;
+
+      const type = currentPlayer?.type === 'o' ? 'x' : 'o'
+  
+      await createPlayer(data.game_id, {
+        name: 'Player 2 CPU',
+        type,
+        isBot: true
+      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (
@@ -38,12 +53,14 @@ const Home: NextPage = () => {
               <PlayerTypeSelect
                 selected={currentPlayer?.type === 'o'}
                 onSelect={() => handleUpdatePlayerType('o')}
-                type="o" 
+                type="o"
+                disabled={adversary?.type === '0'}
               />
               <PlayerTypeSelect 
                 selected={currentPlayer?.type === 'x'}
                 type="x"
                 onSelect={() => handleUpdatePlayerType('x')}
+                disabled={adversary?.type === 'x'}
               />
             </Styles.PlayerTypeContainer>
             <Styles.PlayerDescription>Remember, x goes first</Styles.PlayerDescription>
@@ -55,6 +72,7 @@ const Home: NextPage = () => {
             <Button
               variant="secondary"
               fullWidth
+              onClick={handleCreateVSCPU}
             >
               New game (vs cpu)
             </Button>

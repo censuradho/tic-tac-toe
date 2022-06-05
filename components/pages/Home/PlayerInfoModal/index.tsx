@@ -26,6 +26,8 @@ function BasePlayerInfoModal ({
     toggleIsLoading()
     try {
       addPlayer(nickName)
+    } catch (err) {
+      console.log(err)
     } finally {
       toggleIsLoading()
     }

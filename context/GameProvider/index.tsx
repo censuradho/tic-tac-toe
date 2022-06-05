@@ -6,23 +6,24 @@ import {
   SetStateAction, 
   Dispatch, 
   useCallback, 
-  useMemo
+  useMemo,
+  useEffect
 } from 'react'
 import { v4 as uuid } from 'uuid'
 
 import { BOARD_POSITIONS } from 'constants/game'
 
-import { Game, Player, PlayerSchema, PlayerUpdateSchema } from 'types/game'
+import { CurrentPlayer, Game, PlayerSchema, PlayerUpdateSchema, StoragePlayer } from 'types/game'
 import { PlayerInfoModal } from 'components/pages'
-import { createGame, updatePlayer } from 'lib/firestore'
+import { createGame } from 'lib/firestore'
+import { useFirestore, useLocalStorage } from 'hooks'
 
 type GameData = {
-  currentPlayer: PlayerSchema | null;
-  setCurrentPlayer: (player: Partial<PlayerUpdateSchema>) => void;
+  currentPlayer?: PlayerSchema | null;
   addPlayer: (name: string) => void;
   adversary?: PlayerSchema |null;
-  data: Partial<Game>
-  setData: Dispatch<SetStateAction<Partial<Game>>>
+  data: Partial<Game>;
+  currentTurn: PlayerSchema | null
 }
 
 interface GameProviderProps {
@@ -36,23 +37,39 @@ const baseGame: Partial<Game> = {
 }
 
 export function GameProvider ({ children }: GameProviderProps) {
-  const [data, setData] = useState<Partial<Game>>(baseGame)
-  const [currentPlayer, setCurrentPlayer] = useState<PlayerSchema | null>(null)
+  const [storagePlayer, setStoragePlayer] = useLocalStorage<StoragePlayer | null>('@tic-tac-toe:storageUser', null)
+  const { data } = useFirestore<Game>(`/games/${storagePlayer?.game_id}`)
+
+  const currentPlayer = useMemo(() => {
+    if (!storagePlayer) return null
+
+    const _currentPlayer = Object
+      .entries(data?.players || {})
+      .find(([key, value]) => value.id === storagePlayer.id)
+
+    if (!_currentPlayer) return null
+
+    const [key, result] = _currentPlayer
+
+    return result
+  }, [data?.players, storagePlayer])
 
   const adversary = useMemo(() => {
+    if (!storagePlayer) return null
+    
     const _adversary = Object
-    .entries(data?.players || {})
-    .find(([key, value]) => value.id !== currentPlayer?.id)
+      .entries(data?.players || {})
+      .find(([key, value]) => value.id !== storagePlayer?.id)
 
     if (!_adversary) return null
 
-    const [result] = Object.entries(_adversary).map(([key, value]) => value) as PlayerSchema[]
+    const [key, result] = _adversary
 
     return result
 
-  }, [currentPlayer, data?.players])
+  }, [storagePlayer, data?.players])
 
-  const hasUser = !!currentPlayer
+  const hasUser = !!storagePlayer && !!currentPlayer
 
   const handleAddPlayer = useCallback(async (name: string) => {
     const id = uuid()
@@ -63,32 +80,45 @@ export function GameProvider ({ children }: GameProviderProps) {
       plays: BOARD_POSITIONS,
     }
 
-    if (!currentPlayer) {
+    if (!storagePlayer) {
       const game = await createGame({
         [id]: player
       })
-      setCurrentPlayer(player)
-      setData(game)
+
+      setStoragePlayer({
+        game_id: game.game_id,
+        id: player.id,
+        name: player.name
+      })
     }
 
-  }, [currentPlayer])
+  }, [setStoragePlayer, storagePlayer])
 
-  const handleUpdateCurrentPlayer = useCallback((player: Partial<PlayerUpdateSchema>) => {
-    setCurrentPlayer(prevState => prevState && ({
-      ...prevState,
-      ...player
-    }))
-  }, [])
+  const currentTurn = useMemo(() => {
+    const adversaryMoves = (adversary?.plays || []).filter(value => value).length
+    const currentPlayerMoves = (currentPlayer?.plays || []).filter(value => value).length
 
+    const players = [
+      adversary,
+      currentPlayer
+    ]
+
+    if ((currentPlayerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
+
+    if (currentPlayerMoves > adversaryMoves) return adversary
+
+    return currentPlayer
+
+  }, [adversary, currentPlayer])
+  
   return (
     <GameContext.Provider 
       value={{
         currentPlayer,
         addPlayer: handleAddPlayer,
-        setCurrentPlayer: handleUpdateCurrentPlayer,
         data,
         adversary,
-        setData
+        currentTurn
       }}
     >
       <PlayerInfoModal

@@ -7,7 +7,7 @@ import { app } from './firebase'
 import { CreatePlayer, Game, Player, PlayerUpdateSchema } from 'types/game'
 import { BOARD_POSITIONS } from 'constants/game'
 
-const firestore = getFirestore(app)
+export const firestore = getFirestore(app)
 
 export async function createGame (player: Player) {
   const uid = uuid()
@@ -20,7 +20,7 @@ export async function createGame (player: Player) {
   await setDoc(doc(firestore, 'games', uid), game);
 
   const response = await getDoc(doc(firestore, 'games', uid))
-  return response.data() as Partial<Game>
+  return response.data() as Game
 }
 
 export async function getGame (gameId: string) {
@@ -31,7 +31,7 @@ export async function getGame (gameId: string) {
 export async function updatePlayer (gameId: string, playerId: string, payload: PlayerUpdateSchema) {
   const response = await getDoc(doc(firestore, 'games', gameId))
 
-  const { players }  = response.data() as Partial<Game>
+  const { players = null }  = response.data() || {}  as Partial<Game>
 
   if (!players) throw new Error('Do not have players to update')
 
@@ -52,4 +52,36 @@ export async function updatePlayer (gameId: string, playerId: string, payload: P
   await updateDoc(doc(firestore, 'games', gameId), { 
     players: updatePayload 
   });
+}
+
+export async function createPlayer (gameId: string, payload: CreatePlayer) {
+  const uid = uuid()
+
+  const player: Player = {
+    [uid]: {
+      id: uid,
+      ...payload,
+      plays: BOARD_POSITIONS
+    }
+  }
+
+  const response = await getDoc(doc(firestore, 'games', gameId))
+  const data = response.data() as Partial<Game>
+
+  const canCreatePlayer = Object.keys(data.players || {}).length < 2
+
+  if (!canCreatePlayer) throw new Error('Can not create a new player')
+
+  await updateDoc(doc(firestore, 'games', gameId), { 
+    players: {
+      ...data.players,
+      ...player
+    }
+  });
+  
+  // const game: Game = {
+  //   game_id: gameId,
+  //   players: player
+  // }
+
 }
