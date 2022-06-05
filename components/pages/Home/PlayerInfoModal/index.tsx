@@ -1,41 +1,39 @@
 import { Button, ButtonIcon, Flex, Modal, TextField } from 'components/base'
 import { useGameContext } from 'context'
-import { createGame } from 'lib/firestore'
+import { useBooleanToggle } from 'hooks'
 import { ComponentProps, FormEvent, memo, useState } from 'react'
 
 import * as Styles from './styles'
 
-type ModalProps = Omit<ComponentProps<typeof Modal>, 'children' | 'disabled'>
+type ModalProps = Omit<ComponentProps<typeof Modal>, 'children' | 'disabled' | 'onClose'>
 
 interface PlayerInfoModalProps extends ModalProps {}
 
 function BasePlayerInfoModal ({ 
-  onClose,
   ...props
 }: PlayerInfoModalProps) {
-  const { setData } = useGameContext()
+  const { addPlayer } = useGameContext()
 
   const [nickName, setNickName] = useState('')
 
+  const [isLoading, toggleIsLoading] = useBooleanToggle(false)
+
   const canCloseModal = nickName.length > 0
 
-  const handleClose = canCloseModal ? onClose : undefined
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-
-    const response = await createGame(nickName)
-    
-    setData(prevState => ({
-      ...prevState,
-      ...response.data()
-    }))
+    toggleIsLoading()
+    try {
+      addPlayer(nickName)
+    } finally {
+      toggleIsLoading()
+    }
   }
 
   return (
     <Modal
       {...props}
-      onClose={handleClose}
     >
       <Styles.Container onSubmit={handleSubmit}>
         <Flex
@@ -44,11 +42,6 @@ function BasePlayerInfoModal ({
           alignItems="center"
         >
           <Styles.Title>What is your name?</Styles.Title>
-          <ButtonIcon
-            type="button"
-            onClick={handleClose} 
-            icon={{ name: 'close' }} 
-          />
         </Flex>
         <TextField 
           autoFocus
@@ -58,7 +51,12 @@ function BasePlayerInfoModal ({
           onChange={event => setNickName(event.target.value)}
         />
         <Flex fullWidth justifyContent="flex-end">
-          <Button type="submit" disabled={!canCloseModal}>Confirmar</Button>
+          <Button 
+            type="submit" 
+            disabled={isLoading || !canCloseModal}
+          >
+            Confirmar
+          </Button>
         </Flex>
       </Styles.Container>
     </Modal>

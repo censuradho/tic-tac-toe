@@ -1,39 +1,49 @@
 import { Button, Flex, Icon, Modal } from 'components/base'
-import { PlayerInfoModal, PlayerTypeSelect } from 'components/pages'
+import { PlayerTypeSelect } from 'components/pages'
 import { useGameContext } from 'context'
-import { useBooleanToggle } from 'hooks'
 
 import type { NextPage } from 'next'
 import { useState } from 'react'
 
 import * as Styles from 'styles/Home'
+import * as DefaultStyles from 'styles/Default'
+import { updatePlayer } from 'lib/firestore'
+import { PlayerUpdateSchema } from 'types/game'
 
 const Home: NextPage = () => {
-  const { data } = useGameContext()
-  const [playerType, setPlayerType] = useState('x')
+  const { currentPlayer, data, setCurrentPlayer } = useGameContext()
 
-  const [hasUser, setHasUser] = useState(!!data?.player1)
+  const handleUpdatePlayerType = async (type: string) => {
+    if (!currentPlayer || !data.game_id) return;
+
+    const player: PlayerUpdateSchema = {
+      type
+    }
+    
+    await updatePlayer(data.game_id, currentPlayer?.id, player)
+    setCurrentPlayer(player)
+  }
 
   return (
-    <Styles.Main>
-      <Styles.Container>
+    <DefaultStyles.Main>
+      <DefaultStyles.Container>
         <Flex flexDirection="column" gap={2}>
           <Flex gap={1} justifyContent="center">
             <Icon name="x" color="primary" />
             <Icon name="square" color="secondary" />
           </Flex>
           <Styles.PlayerSection>
-            <Styles.PlayerTitle>Pick player 1 is mark</Styles.PlayerTitle>
+            <Styles.PlayerTitle>{`Pick ${ currentPlayer?.name || 'player 1'} is mark`}</Styles.PlayerTitle>
             <Styles.PlayerTypeContainer>
               <PlayerTypeSelect
-                selected={playerType === '0'}
-                onSelect={() => setPlayerType('0')}
+                selected={currentPlayer?.type === 'o'}
+                onSelect={() => handleUpdatePlayerType('o')}
                 type="o" 
               />
               <PlayerTypeSelect 
-                selected={playerType === 'x'}
+                selected={currentPlayer?.type === 'x'}
                 type="x"
-                onSelect={() => setPlayerType('x')}
+                onSelect={() => handleUpdatePlayerType('x')}
               />
             </Styles.PlayerTypeContainer>
             <Styles.PlayerDescription>Remember, x goes first</Styles.PlayerDescription>
@@ -55,8 +65,8 @@ const Home: NextPage = () => {
             </Button>
           </Flex>
         </Flex>
-      </Styles.Container>
-    </Styles.Main>
+      </DefaultStyles.Container>
+    </DefaultStyles.Main>
   )
 }
 
