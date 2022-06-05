@@ -1,7 +1,11 @@
-export interface CreateGame {
-  player1: string;
+export interface Player {
+  name: string;
+  plays: string[]
 }
 
-export interface Game extends CreateGame {
+export type CreatePlayer = Player
 
+export interface Game {
+  game_id: string;
+  players: Player[];
 }

@@ -24,13 +24,11 @@ function BasePlayerInfoModal ({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
-    const data = await createGame({
-      player1: nickName
-    })
-
+    const response = await createGame(nickName)
+    
     setData(prevState => ({
       ...prevState,
-      ...data
+      ...response.data()
     }))
   }
 

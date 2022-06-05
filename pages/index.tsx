@@ -16,11 +16,6 @@ const Home: NextPage = () => {
 
   return (
     <Styles.Main>
-      <PlayerInfoModal 
-        id="home"
-        visible={hasUser}
-        onClose={() => setHasUser(false)}
-      />
       <Styles.Container>
         <Flex flexDirection="column" gap={2}>
           <Flex gap={1} justifyContent="center">

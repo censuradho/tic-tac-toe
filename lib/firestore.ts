@@ -4,14 +4,29 @@ import { getFirestore, addDoc, setDoc, doc, getDocs, getDoc  } from 'firebase/fi
 
 import { app } from './firebase'
 
-import { CreateGame, Game } from 'types/game'
+import { CreatePlayer, Game } from 'types/game'
+import { BOARD_POSITIONS } from 'constants/game'
 
 const firestore = getFirestore(app)
 
-export async function createGame (payload: CreateGame) {
+export async function createGame (playerName: string) {
   const uid = uuid()
 
-  await setDoc(doc(firestore, 'games', uid), payload);
+  const player: CreatePlayer = {
+    name: playerName,
+    plays: BOARD_POSITIONS
+  }
 
-  return await (await getDoc(doc(firestore, 'games', uid))).data() as Game
+  const game: Game = {
+    game_id: uid,
+    players: [player]
+  }
+  
+  await setDoc(doc(firestore, 'games', uid), game);
+
+  return await getDoc(doc(firestore, 'games', uid))
+}
+
+export async function getGame (gameId: string) {
+  return await getDoc(doc(firestore, 'games', gameId))
 }
