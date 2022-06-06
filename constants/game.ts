@@ -14,7 +14,12 @@ export const WIN_COMBOS = [
   [6, 4, 2],
 ]
 
-export const playerTypeIcon: Record<string, IconNames> = {
+export const PLAYER_TYPES = {
+  o: 'o',
+  x: 'x',
+}
+
+export const playerTypeIcon: Record<keyof typeof PLAYER_TYPES, IconNames> = {
   o: 'square',
   x: 'x'
 }

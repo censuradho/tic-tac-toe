@@ -7,13 +7,14 @@ import * as Styles from './styles'
 
 type ModalProps = Omit<ComponentProps<typeof Modal>, 'children' | 'disabled' | 'onClose'>
 
-interface PlayerInfoModalProps extends ModalProps {}
+interface PlayerInfoModalProps extends ModalProps {
+  onSubmit?: (nickname: string) => void;
+}
 
-function BasePlayerInfoModal ({ 
+function BasePlayerInfoModal ({
+  onSubmit,
   ...props
 }: PlayerInfoModalProps) {
-  const { addPlayer } = useGameContext()
-
   const [nickName, setNickName] = useState('')
 
   const [isLoading, toggleIsLoading] = useBooleanToggle(false)
@@ -26,7 +27,7 @@ function BasePlayerInfoModal ({
     toggleIsLoading()
 
     try {
-      await addPlayer(nickName)
+      onSubmit?.(nickName)
     } catch (err) {
       console.log(err)
     } finally {

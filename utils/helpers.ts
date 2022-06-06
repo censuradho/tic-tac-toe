@@ -14,3 +14,7 @@ export const resolvePath = (path: string, obj: Record<string, any>) => {
 
   return tempPath;
 };
+
+export function minMaxAlgorithm (state: string[], minOrMax: number) {
+
+}

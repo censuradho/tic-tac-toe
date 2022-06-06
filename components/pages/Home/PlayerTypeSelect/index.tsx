@@ -7,10 +7,8 @@ import { playerTypeIcon } from 'constants/game'
 
 type StyleVariant = VariantProps<typeof Styles.Button>
 
-type PlayerType = 'x' | 'o'
-
 interface PlayerTypeSelectProps extends StyleVariant {
-  type: PlayerType;
+  type: string;
   onSelect?: () => void;
   disabled?: boolean
 }
@@ -29,10 +27,10 @@ function BasePlayerTypeSelect ({
       selected={selected}
       disabled={disabled}
     >
-      <Icon 
+      {playerTypeIcon[type] && <Icon 
         name={playerTypeIcon[type]} 
         color={selected ? 'background' : 'gray'} 
-      />
+      />}
     </Styles.Button>
   )
 }

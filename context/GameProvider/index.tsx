@@ -13,23 +13,28 @@ import { v4 as uuid } from 'uuid'
 
 import { BOARD_POSITIONS, WIN_COMBOS } from 'constants/game'
 
-import { CurrentPlayer, Game, PlayerSchema, PlayerUpdateSchema, StoragePlayer } from 'types/game'
+import type { 
+  CurrentPlayer, 
+  GameSchema, 
+  PlayerSchema, 
+  PlayerUpdateSchema, 
+  StorageGameSchema 
+} from 'types/game'
+
 import { PlayerInfoModal } from 'components/pages'
-import { createGame, updateGame, updatePlayer } from 'lib/firestore'
+import { createGame, createPlayer, updateGame, updatePlayer } from 'lib/firestore'
 import { useFirestore, useLocalStorage } from 'hooks'
 
 type GameData = {
-  currentPlayer?: PlayerSchema | null;
-  winner?: {
-    player?: PlayerSchema | null;
-    play: number[]
-  };
-  addPlayer: (name: string) => Promise<void>;
+  player?: PlayerSchema | null;
+  winner: PlayerSchema | undefined;
+  wonSequence: number[];
   adversary?: PlayerSchema |null;
-  data: Partial<Game>;
+  data: Partial<GameSchema>;
   currentTurn: PlayerSchema | null;
   move: (playerId: string, index: number) => Promise<void>
   resetGame: () => Promise<void>;
+  setStorageGame: (value: StorageGameSchema) => void
 }
 
 interface GameProviderProps {
@@ -39,29 +44,30 @@ interface GameProviderProps {
 export const GameContext = createContext<GameData>({} as GameData)
 
 export function GameProvider ({ children }: GameProviderProps) {
-  const [storagePlayer, setStoragePlayer] = useLocalStorage<StoragePlayer | null>('@tic-tac-toe:storageUser', null)
-  const { data } = useFirestore<Game>(`/games/${storagePlayer?.game_id}`)
+  const [storageGame, setStorageGame] = useLocalStorage<StorageGameSchema | null>('@tic-tac-toe:storageUser', null)
+  
+  const { data } = useFirestore<Partial<GameSchema>>(`/games/${storageGame?.game_id}`)
 
-  const currentPlayer = useMemo(() => {
-    if (!storagePlayer) return null
+  const player = useMemo(() => {
+    if (!storageGame) return null
 
-    const _currentPlayer = Object
+    const _player = Object
       .entries(data?.players || {})
-      .find(([key, value]) => value.id === storagePlayer.id)
+      .find(([key, value]) => value.id === storageGame.player_id)
 
-    if (!_currentPlayer) return null
+    if (!_player) return null
 
-    const [key, result] = _currentPlayer
+    const [key, result] = _player
 
     return result
-  }, [data?.players, storagePlayer])
+  }, [data?.players, storageGame])
 
   const adversary = useMemo(() => {
-    if (!storagePlayer) return null
+    if (!storageGame) return null
     
     const _adversary = Object
       .entries(data?.players || {})
-      .find(([key, value]) => value.id !== storagePlayer?.id)
+      .find(([key, value]) => value.id !== storageGame?.player_id)
 
     if (!_adversary) return null
 
@@ -69,100 +75,73 @@ export function GameProvider ({ children }: GameProviderProps) {
 
     return result
 
-  }, [storagePlayer, data?.players])
-
+  }, [data?.players, storageGame])
   
   const currentTurn = useMemo(() => {
-    const adversaryMoves = (adversary?.plays || []).filter(value => value).length
-    const currentPlayerMoves = (currentPlayer?.plays || []).filter(value => value).length
+    const adversaryMoves = data?.board?.filter(value => value === adversary?.type).length || 0
+    const playerMoves = data?.board?.filter(value => value === player?.type).length || 0
 
     const players = [
       adversary,
-      currentPlayer
+      player
     ]
 
-    if ((currentPlayerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
+    if ((playerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
 
-    if (currentPlayerMoves > adversaryMoves) return adversary
+    if (playerMoves > adversaryMoves) return adversary
 
-    return currentPlayer
+    return player
 
-  }, [adversary, currentPlayer])
+  }, [adversary, player, data])
+
 
   const winner = useMemo(() => {
-    const players = [
-      currentPlayer,
-      adversary
-    ]
+    const players = Object.entries(data?.players || {}).map(([key, value]) => value)
 
-    const win = WIN_COMBOS.map(play => {
-      const [first, secondy, third] = play
+    const won = players.find(player => {
+      const comboMatch = WIN_COMBOS.find(combo => {
+      const match = combo.every(cell => data?.board?.[cell] === player.type)
+        return match
+      })
 
-      const player = players.find(player => 
-        player?.plays[first]
-        && player?.plays[secondy]
-        && player?.plays[third]
-      )
-
-      if (!player) return undefined
-
-      return {
-        player,
-        play
-      }
+      return comboMatch
     })
 
-    return win.find(value => value)
-  }, [adversary, currentPlayer])
+    return won
+  }, [data?.board, data?.players])
 
-  const hasUser = !!storagePlayer && !!currentPlayer
-
-  const handleAddPlayer = useCallback(async (name: string) => {
-    const id = uuid()
-
-    const player: PlayerSchema = {
-      id,
-      name,
-      plays: BOARD_POSITIONS,
-    }
-
-    if (!storagePlayer) {
-      const game = await createGame({
-        [id]: player
-      })
-
-      setStoragePlayer({
-        game_id: game.game_id,
-        id: player.id,
-        name: player.name
-      })
-    }
-
-  }, [setStoragePlayer, storagePlayer])
-
+  const wonSequence = useMemo(() => {
+    return WIN_COMBOS.find(combo => {
+      const match = combo.every(cell => data?.board?.[cell] === winner?.type)
+      return match
+    }) || []
+  }, [data?.board, winner?.type])
   
   const move = useCallback(async (playerId: string, index: number) => {
-    if (!data.game_id ||  !playerId) return;
+    if (!data.game_id || !!winner || !adversary?.id) return;
 
-    const player = data.players[playerId]
-    const plays = player.plays.map((value, indexPlay) => indexPlay === index ? (player.type as string) : value)
-    
-    await updatePlayer(data.game_id, playerId, {
-      plays
+    const currentPlayer = data?.players?.[playerId]
+    const alreadyMoved = data?.board?.[index]
+
+    if (alreadyMoved) return;
+
+    const board = data?.board?.map((value, cell) => index === cell ? (currentPlayer?.type as string) : value)
+
+    await updateGame(data.game_id, {
+      board
     })
 
-  }, [data.game_id, data.players])
+  }, [data?.board, data.game_id, data?.players, winner])
 
   const resetGame = useCallback(async () => {
-    if (!data.game_id) return;
+    if (!data.game_id || !data?.players) return;
     
-    const players = Object.entries(data.players).map(([key, value]) => ({
+    const players = Object.entries(data?.players).map(([key, value]) => ({
       [key]: {
         ...value,
-        ...(value.id === winner?.player?.id && ({
+        ...(value.id === winner?.id && ({
           wins: (value?.wins || 0) + 1
         })),
-        plays: BOARD_POSITIONS
       }
     })).reduce((prev, next) => ({
       ...prev,
@@ -170,29 +149,27 @@ export function GameProvider ({ children }: GameProviderProps) {
     }))
 
     await updateGame(data.game_id, {
+      board: BOARD_POSITIONS,
       players
     })
     
-  }, [data.game_id, data.players, winner])
+  }, [data.game_id, data?.players, winner?.id])
 
 
   return (
     <GameContext.Provider 
       value={{
         winner,
-        currentPlayer,
-        addPlayer: handleAddPlayer,
-        data,
+        wonSequence,
+        player,
         adversary,
+        data,
         currentTurn,
         resetGame,
-        move
+        move,
+        setStorageGame,
       }}
     >
-      <PlayerInfoModal
-        id="home"
-        visible={!hasUser}
-      />
       {children}
     </GameContext.Provider>
   )

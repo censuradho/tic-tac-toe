@@ -1,32 +1,40 @@
 import { v4 as uuid } from 'uuid'
 
-import { getFirestore, addDoc, setDoc, doc, updateDoc , getDoc  } from 'firebase/firestore'
+import { getFirestore, setDoc, doc, updateDoc , getDoc  } from 'firebase/firestore'
 
 import { app } from './firebase'
 
-import { CreatePlayer, Game, GameUpdateSchema, Player, PlayerUpdateSchema } from 'types/game'
+import type { 
+  CreateGame, 
+  CreatePlayer, 
+  GameSchema, 
+  GameUpdateSchema, 
+  Player, 
+  PlayerSchema, 
+  PlayerUpdateSchema 
+} from 'types/game'
+
 import { BOARD_POSITIONS } from 'constants/game'
-import { RiContactsBookLine } from '@meronex/icons/ri'
 
 export const firestore = getFirestore(app)
 
-export async function createGame (player: Player) {
+export async function createGame () {
   const uid = uuid()
 
-  const game: Game = {
+  const game: CreateGame = {
     game_id: uid,
-    players: player
+    board: BOARD_POSITIONS
   }
   
   await setDoc(doc(firestore, 'games', uid), game);
 
   const response = await getDoc(doc(firestore, 'games', uid))
-  return response.data() as Game
+  return response.data() as GameSchema
 }
 
 export async function getGame (gameId: string) {
   const response = await getDoc(doc(firestore, 'games', gameId))
-  return response.data() as Partial<Game>
+  return response.data() as GameSchema
 }
 
 export async function updateGame (gameId: string, payload: GameUpdateSchema) {
@@ -44,7 +52,7 @@ export async function updateGame (gameId: string, payload: GameUpdateSchema) {
 export async function updatePlayer (gameId: string, playerId: string, payload: PlayerUpdateSchema) {
   const response = await getDoc(doc(firestore, 'games', gameId))
 
-  const { players = null }  = response.data() || {}  as Partial<Game>
+  const { players = null }  = response.data() || {}  as Partial<GameSchema>
 
   if (!players) throw new Error('Do not have players to update')
 
@@ -70,16 +78,20 @@ export async function updatePlayer (gameId: string, playerId: string, payload: P
 export async function createPlayer (gameId: string, payload: CreatePlayer) {
   const uid = uuid()
 
-  const player: Player = {
+  const player: PlayerSchema = {
+    id: uid,
+    ...payload,
+  }
+
+  const payloadPlayer: Player = {
     [uid]: {
       id: uid,
       ...payload,
-      plays: BOARD_POSITIONS
     }
   }
 
   const response = await getDoc(doc(firestore, 'games', gameId))
-  const data = response.data() as Partial<Game>
+  const data = response.data() as Partial<GameSchema>
 
   const canCreatePlayer = Object.keys(data.players || {}).length < 2
 
@@ -88,13 +100,9 @@ export async function createPlayer (gameId: string, payload: CreatePlayer) {
   await updateDoc(doc(firestore, 'games', gameId), { 
     players: {
       ...data.players,
-      ...player
+      ...payloadPlayer
     }
   });
   
-  // const game: Game = {
-  //   game_id: gameId,
-  //   players: player
-  // }
-
+  return player
 }

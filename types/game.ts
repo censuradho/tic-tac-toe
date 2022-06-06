@@ -2,35 +2,37 @@
 export interface PlayerSchema {
   id: string;
   name: string;
-  plays: string[];
   type?: string;
   isBot?: boolean;
-  wins?: number;
+  wins: number;
 }
 
 export type Player = Record<string, PlayerSchema>
 
-export type CreatePlayer = Omit<PlayerSchema, 'id' | 'plays'>
+export type CreatePlayer = Omit<PlayerSchema, 'id'>
 
 export type PlayerUpdateSchema = Partial<Omit<PlayerSchema, 
 'id'
 >>
 
-
 export type CurrentPlayer = PlayerSchema & {
   game_id: string
 }
 
-export interface StoragePlayer {
+export interface GameSchema {
   game_id: string;
-  id: string;
-  name: string
-}
-
-export interface Game {
-  game_id: string;
-  currentPlayerId?: string;
+  board: string[];
   players: Player;
 }
 
-export type GameUpdateSchema = Partial<Game>
+export type CreateGame = Pick<GameSchema, 
+  'game_id'
+  | 'board'
+>
+
+export type GameUpdateSchema = Partial<GameSchema>
+
+export interface StorageGameSchema {
+  game_id: string;
+  player_id?: string
+} 
