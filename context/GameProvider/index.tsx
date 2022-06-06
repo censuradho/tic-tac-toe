@@ -20,7 +20,10 @@ import { useFirestore, useLocalStorage } from 'hooks'
 
 type GameData = {
   currentPlayer?: PlayerSchema | null;
-  winner?: PlayerSchema | null;
+  winner?: {
+    player?: PlayerSchema | null;
+    play: number[]
+  };
   addPlayer: (name: string) => Promise<void>;
   adversary?: PlayerSchema |null;
   data: Partial<Game>;
@@ -95,11 +98,18 @@ export function GameProvider ({ children }: GameProviderProps) {
     const win = WIN_COMBOS.map(play => {
       const [first, secondy, third] = play
 
-      return players.find(player => 
+      const player = players.find(player => 
         player?.plays[first]
         && player?.plays[secondy]
         && player?.plays[third]
       )
+
+      if (!player) return undefined
+
+      return {
+        player,
+        play
+      }
     })
 
     return win.find(value => value)
@@ -149,7 +159,7 @@ export function GameProvider ({ children }: GameProviderProps) {
     const players = Object.entries(data.players).map(([key, value]) => ({
       [key]: {
         ...value,
-        ...(value.id === winner?.id && ({
+        ...(value.id === winner?.player?.id && ({
           wins: (value?.wins || 0) + 1
         })),
         plays: BOARD_POSITIONS

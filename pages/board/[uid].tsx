@@ -36,13 +36,13 @@ const Board: NextPage = () => {
 
     const somePlayerAlreadyHavePlayInThisBoard = (!!adversary?.plays[index] || !!currentPlayer?.plays[index])
 
-    const canChoose = currentTurn && !somePlayerAlreadyHavePlayInThisBoard && !winner
+    const canChoose = currentTurn && !somePlayerAlreadyHavePlayInThisBoard && !winner?.player
 
     const variant = 
-      winner?.plays[index] 
-      ? (mapTypeToVariant?.[winner?.type as keyof typeof mapTypeToVariant] || undefined) as Variants | undefined 
-      : undefined
-
+      winner?.play.includes(index)
+        ? (mapTypeToVariant?.[winner?.player?.type as keyof typeof mapTypeToVariant] || undefined) as Variants | undefined 
+        : undefined
+    
 
     return (
       <Styles.ButtonBoard 
