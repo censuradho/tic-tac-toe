@@ -14,9 +14,13 @@ type Variants = VariantProps<typeof Styles.ButtonBoard>['variant']
 
 const Board: NextPage = () => {
 
-  const mapTypeToVariant = {
-    'o': 'primary',
-    'x': 'secondary',
+  const mapTypeToVariant = (type?: string) =>  {
+    const variants: Record<string, Variants> = {
+      'o': 'primary',
+      'x': 'secondary',
+    }
+
+    return type && variants?.[type as keyof typeof variants] || undefined
   }
 
   const { 
@@ -34,15 +38,14 @@ const Board: NextPage = () => {
 
     const type = playerTypeIcon[(currentPlayerPlay || adversaryPlay) || ''] || ''
 
-    const somePlayerAlreadyHavePlayInThisBoard = (!!adversary?.plays[index] || !!currentPlayer?.plays[index])
+    const playerAlreadyHavePlayInThisBoard = (!!adversary?.plays[index] || !!currentPlayer?.plays[index])
 
-    const canChoose = currentTurn && !somePlayerAlreadyHavePlayInThisBoard && !winner?.player
+    const canChoose = currentTurn && !playerAlreadyHavePlayInThisBoard && !winner?.player
 
     const variant = 
       winner?.play.includes(index)
-        ? (mapTypeToVariant?.[winner?.player?.type as keyof typeof mapTypeToVariant] || undefined) as Variants | undefined 
+        ? mapTypeToVariant(winner?.player?.type)
         : undefined
-    
 
     return (
       <Styles.ButtonBoard 
@@ -81,11 +84,11 @@ const Board: NextPage = () => {
             {renderBoard}
           </Grid>
           <Grid gridTemplateColumns="repeat(2, 1fr)" gap={1}>
-            <Styles.Info variant={mapTypeToVariant[currentPlayer?.type as keyof typeof mapTypeToVariant] as Variants | undefined}>
+            <Styles.Info variant={mapTypeToVariant(currentPlayer?.type)}>
               <span>{`${currentPlayer?.type} you`}</span>
               {currentPlayer?.wins}
             </Styles.Info>
-            <Styles.Info variant={mapTypeToVariant[adversary?.type as keyof typeof mapTypeToVariant] as Variants | undefined}>
+            <Styles.Info variant={mapTypeToVariant(adversary?.type)}>
               <span>{`${currentPlayer?.type} ${adversary?.name}`}</span>
               {adversary?.wins}
             </Styles.Info>

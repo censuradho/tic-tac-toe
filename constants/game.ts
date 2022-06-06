@@ -1,6 +1,7 @@
 import { IconNames } from 'components/base'
 
-export const BOARD_POSITIONS: string[] = ['', '', '', '', '', '', '', '', '']
+export const BOARD_POSITIONS: string[] = Array.from(Array(9).fill(''))
+
 export const WIN_COMBOS = [
   [0, 1, 2],
   [3, 4, 5],
