@@ -80,6 +80,16 @@ const Board: NextPage = () => {
           >
             {renderBoard}
           </Grid>
+          <Grid gridTemplateColumns="repeat(2, 1fr)" gap={1}>
+            <Styles.Info variant={mapTypeToVariant[currentPlayer?.type as keyof typeof mapTypeToVariant] as Variants | undefined}>
+              <span>{`${currentPlayer?.type} you`}</span>
+              {currentPlayer?.wins}
+            </Styles.Info>
+            <Styles.Info variant={mapTypeToVariant[adversary?.type as keyof typeof mapTypeToVariant] as Variants | undefined}>
+              <span>{`${currentPlayer?.type} ${adversary?.name}`}</span>
+              {adversary?.wins}
+            </Styles.Info>
+          </Grid>
         </Flex>
       </DefaultStyles.Container>
     </DefaultStyles.Main>

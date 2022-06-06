@@ -38,8 +38,6 @@ export const RestartButton = styled('button', {
 })
 
 export const ButtonBoard = styled('button', {
-  // height: '9.7rem',
-  // width: '9.7rem',
   background: '$foreground',
   height: '9.75rem',
   borderRadius: '$sm',
@@ -64,6 +62,39 @@ export const ButtonBoard = styled('button', {
         'svg': {
           fill: '$secondary'
         },
+      }
+    }
+  }
+})
+
+export const Info = styled('div', {
+  width: '100%',
+  borderRadius: '$sm',
+  padding: '1rem 0',
+  boxShadow: '$sm',
+  textTransform: 'uppercase',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '$lg',
+  fontWeight: 600,
+  flexDirection: 'column',
+  gap: '0.5rem',
+
+  'span': {
+    fontWeight: 500,
+    fontSize: '$sm',
+    color: 'inherit'
+  },
+  color: '$background',
+
+  variants: {
+    variant: {
+      primary: {
+        background: '$primary'
+      },
+      secondary: {
+        background: '$secondary'
       }
     }
   }
