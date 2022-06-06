@@ -28,5 +28,8 @@ export interface StoragePlayer {
 
 export interface Game {
   game_id: string;
+  currentPlayerId?: string;
   players: Player;
 }
+
+export type GameUpdateSchema = Partial<Game>

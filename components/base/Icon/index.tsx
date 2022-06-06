@@ -4,6 +4,7 @@ import {
   MdClose,
 } from '@meronex/icons/ios';
 import { IconType } from '@meronex/icons';
+import { RiRestartLine } from '@meronex/icons/ri';
 
 import SquareIcon from 'assets/square.svg'
 
@@ -14,7 +15,8 @@ import { theme } from 'stitches.config'
 const icons = {
   square: SquareIcon,
   x: XIcon,
-  close: MdClose
+  close: MdClose,
+  restart: RiRestartLine
 }
 
 export type IconNames = keyof typeof icons

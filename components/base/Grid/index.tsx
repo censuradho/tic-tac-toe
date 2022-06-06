@@ -6,6 +6,7 @@ type Styles = Pick<CSSProperties,
   | 'alignItems'
   | 'justifyContent'
   | 'gridTemplateColumns'
+  | 'gridTemplateRows'
 > & { 
   gap?: number 
 }

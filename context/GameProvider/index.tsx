@@ -15,7 +15,7 @@ import { BOARD_POSITIONS } from 'constants/game'
 
 import { CurrentPlayer, Game, PlayerSchema, PlayerUpdateSchema, StoragePlayer } from 'types/game'
 import { PlayerInfoModal } from 'components/pages'
-import { createGame } from 'lib/firestore'
+import { createGame, updateGame, updatePlayer } from 'lib/firestore'
 import { useFirestore, useLocalStorage } from 'hooks'
 
 type GameData = {
@@ -23,7 +23,9 @@ type GameData = {
   addPlayer: (name: string) => void;
   adversary?: PlayerSchema |null;
   data: Partial<Game>;
-  currentTurn: PlayerSchema | null
+  currentTurn: PlayerSchema | null;
+  move: (playerId: string, index: number) => Promise<void>
+  resetGame: () => Promise<void>;
 }
 
 interface GameProviderProps {
@@ -105,12 +107,43 @@ export function GameProvider ({ children }: GameProviderProps) {
 
     if ((currentPlayerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
 
-    if (currentPlayerMoves > adversaryMoves) return adversary
+    if (currentPlayerMoves >= adversaryMoves) return adversary
 
     return currentPlayer
 
   }, [adversary, currentPlayer])
   
+  const move = useCallback(async (playerId: string, index: number) => {
+    if (!data.game_id ||  !playerId) return;
+
+    const player = data.players[playerId]
+    const plays = player.plays.map((value, indexPlay) => indexPlay === index ? (player.type as string) : value)
+    
+    await updatePlayer(data.game_id, playerId, {
+      plays
+    })
+
+  }, [data.game_id, data.players])
+
+  const resetGame = useCallback(async () => {
+    if (!data.game_id) return;
+    
+    const players = Object.entries(data.players).map(([key, value]) => ({
+      [key]: {
+        ...value,
+        plays: BOARD_POSITIONS
+      }
+    })).reduce((prev, next) => ({
+      ...prev,
+      ...next
+    }))
+    
+    await updateGame(data.game_id, {
+      players
+    })
+    
+  }, [data.game_id, data.players])
+
   return (
     <GameContext.Provider 
       value={{
@@ -118,7 +151,9 @@ export function GameProvider ({ children }: GameProviderProps) {
         addPlayer: handleAddPlayer,
         data,
         adversary,
-        currentTurn
+        currentTurn,
+        resetGame,
+        move
       }}
     >
       <PlayerInfoModal

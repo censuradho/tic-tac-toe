@@ -4,7 +4,7 @@ import { getFirestore, addDoc, setDoc, doc, updateDoc , getDoc  } from 'firebase
 
 import { app } from './firebase'
 
-import { CreatePlayer, Game, Player, PlayerUpdateSchema } from 'types/game'
+import { CreatePlayer, Game, GameUpdateSchema, Player, PlayerUpdateSchema } from 'types/game'
 import { BOARD_POSITIONS } from 'constants/game'
 
 export const firestore = getFirestore(app)
@@ -27,6 +27,18 @@ export async function getGame (gameId: string) {
   const response = await getDoc(doc(firestore, 'games', gameId))
   return response.data() as Partial<Game>
 }
+
+export async function updateGame (gameId: string, payload: GameUpdateSchema) {
+  const response = await getDoc(doc(firestore, 'games', gameId))
+  const data = response.data()
+
+  if (!data) throw new Error('game is not initialized')
+
+  await updateDoc(doc(firestore, 'games', gameId), {
+    ...data,
+    ...payload
+  })
+} 
 
 export async function updatePlayer (gameId: string, playerId: string, payload: PlayerUpdateSchema) {
   const response = await getDoc(doc(firestore, 'games', gameId))
