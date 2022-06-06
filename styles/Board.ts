@@ -51,5 +51,20 @@ export const ButtonBoard = styled('button', {
 
   '&:hover': {
     opacity: 0.7
+  },
+
+  variants: {
+    variant: {
+      primary: {
+        'svg': {
+          fill: '$primary'
+        },
+      },
+      secondary: {
+        'svg': {
+          fill: '$secondary'
+        },
+      }
+    }
   }
 })

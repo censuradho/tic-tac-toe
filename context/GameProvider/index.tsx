@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { v4 as uuid } from 'uuid'
 
-import { BOARD_POSITIONS } from 'constants/game'
+import { BOARD_POSITIONS, WIN_COMBOS } from 'constants/game'
 
 import { CurrentPlayer, Game, PlayerSchema, PlayerUpdateSchema, StoragePlayer } from 'types/game'
 import { PlayerInfoModal } from 'components/pages'
@@ -20,7 +20,8 @@ import { useFirestore, useLocalStorage } from 'hooks'
 
 type GameData = {
   currentPlayer?: PlayerSchema | null;
-  addPlayer: (name: string) => void;
+  winner?: PlayerSchema | null;
+  addPlayer: (name: string) => Promise<void>;
   adversary?: PlayerSchema |null;
   data: Partial<Game>;
   currentTurn: PlayerSchema | null;
@@ -33,10 +34,6 @@ interface GameProviderProps {
 }
 
 export const GameContext = createContext<GameData>({} as GameData)
-
-const baseGame: Partial<Game> = {
-  players: {}
-}
 
 export function GameProvider ({ children }: GameProviderProps) {
   const [storagePlayer, setStoragePlayer] = useLocalStorage<StoragePlayer | null>('@tic-tac-toe:storageUser', null)
@@ -71,6 +68,43 @@ export function GameProvider ({ children }: GameProviderProps) {
 
   }, [storagePlayer, data?.players])
 
+  
+  const currentTurn = useMemo(() => {
+    const adversaryMoves = (adversary?.plays || []).filter(value => value).length
+    const currentPlayerMoves = (currentPlayer?.plays || []).filter(value => value).length
+
+    const players = [
+      adversary,
+      currentPlayer
+    ]
+
+    if ((currentPlayerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
+
+    if (currentPlayerMoves > adversaryMoves) return adversary
+
+    return currentPlayer
+
+  }, [adversary, currentPlayer])
+
+  const winner = useMemo(() => {
+    const players = [
+      currentPlayer,
+      adversary
+    ]
+
+    const win = WIN_COMBOS.map(play => {
+      const [first, secondy, third] = play
+
+      return players.find(player => 
+        player?.plays[first]
+        && player?.plays[secondy]
+        && player?.plays[third]
+      )
+    })
+
+    return win.find(value => value)
+  }, [adversary, currentPlayer])
+
   const hasUser = !!storagePlayer && !!currentPlayer
 
   const handleAddPlayer = useCallback(async (name: string) => {
@@ -96,22 +130,6 @@ export function GameProvider ({ children }: GameProviderProps) {
 
   }, [setStoragePlayer, storagePlayer])
 
-  const currentTurn = useMemo(() => {
-    const adversaryMoves = (adversary?.plays || []).filter(value => value).length
-    const currentPlayerMoves = (currentPlayer?.plays || []).filter(value => value).length
-
-    const players = [
-      adversary,
-      currentPlayer
-    ]
-
-    if ((currentPlayerMoves + adversaryMoves) === 0) return (players.find(value => value?.type === 'x') || null)
-
-    if (currentPlayerMoves >= adversaryMoves) return adversary
-
-    return currentPlayer
-
-  }, [adversary, currentPlayer])
   
   const move = useCallback(async (playerId: string, index: number) => {
     if (!data.game_id ||  !playerId) return;
@@ -131,22 +149,27 @@ export function GameProvider ({ children }: GameProviderProps) {
     const players = Object.entries(data.players).map(([key, value]) => ({
       [key]: {
         ...value,
+        ...(value.id === winner?.id && ({
+          wins: (value?.wins || 0) + 1
+        })),
         plays: BOARD_POSITIONS
       }
     })).reduce((prev, next) => ({
       ...prev,
       ...next
     }))
-    
+
     await updateGame(data.game_id, {
       players
     })
     
-  }, [data.game_id, data.players])
+  }, [data.game_id, data.players, winner])
+
 
   return (
     <GameContext.Provider 
       value={{
+        winner,
         currentPlayer,
         addPlayer: handleAddPlayer,
         data,

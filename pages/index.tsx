@@ -1,26 +1,41 @@
+import type { NextPage } from 'next'
+import { useRouter } from 'next/router'
+
 import { Button, Flex, Icon } from 'components/base'
 import { PlayerTypeSelect } from 'components/pages'
-import { useGameContext } from 'context'
 
-import type { NextPage } from 'next'
+import { useGameContext } from 'context'
 
 
 import * as Styles from 'styles/Home'
 import * as DefaultStyles from 'styles/Default'
+import { theme } from 'stitches.config'
+
 import { updatePlayer, createPlayer } from 'lib/firestore'
-import { PlayerUpdateSchema } from 'types/game'
+
+import type { PlayerUpdateSchema } from 'types/game'
+import { routePaths } from 'constants/routes'
+import { resolvePath } from 'utils/helpers'
 
 const Home: NextPage = () => {
   const { currentPlayer, data, adversary } = useGameContext()
+  const { primary, secondary } = theme.colors
+
+  const router = useRouter()
 
   const handleUpdatePlayerType = async (type: string) => {
-    if (!currentPlayer || !data.game_id) return;
+    try {
+      if (!currentPlayer || !data.game_id) return;
 
-    const player: PlayerUpdateSchema = {
-      type
+      const player: PlayerUpdateSchema = {
+        type,
+        wins: 0
+      }
+  
+      await updatePlayer(data.game_id, currentPlayer?.id, player)
+    } catch (err) {
+      console.log(err)
     }
-
-    await updatePlayer(data.game_id, currentPlayer?.id, player)
   }
 
   const handleCreateVSCPU = async () => {
@@ -32,8 +47,14 @@ const Home: NextPage = () => {
       await createPlayer(data.game_id, {
         name: 'Player 2 CPU',
         type,
-        isBot: true
+        isBot: true,
+        wins: 0
       })
+
+      router.push(resolvePath(routePaths.board, {
+        id: data.game_id
+      }))
+
     } catch (err) {
       console.log(err)
     }

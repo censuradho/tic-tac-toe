@@ -1,19 +1,31 @@
-import { Flex, Grid, Icon } from "components/base"
-import { BOARD_POSITIONS, playerTypeIcon } from "constants/game"
-import { useGameContext } from "context"
 import { NextPage } from "next"
+import { VariantProps } from '@stitches/react'
+
+import { Flex, Grid, Icon } from "components/base"
+
+import { BOARD_POSITIONS, playerTypeIcon } from "constants/game"
+
+import { useGameContext } from "context"
 
 import * as DefaultStyles from 'styles/Default'
 import * as Styles from 'styles/Board'
-import { PlayerSchema } from "types/game"
+
+type Variants = VariantProps<typeof Styles.ButtonBoard>['variant']
 
 const Board: NextPage = () => {
+
+  const mapTypeToVariant = {
+    'o': 'primary',
+    'x': 'secondary',
+  }
+
   const { 
     currentPlayer, 
     adversary, 
     move, 
     currentTurn, 
-    resetGame 
+    resetGame,
+    winner
   } = useGameContext()
 
   const renderBoard = BOARD_POSITIONS.map((value, index) => {
@@ -24,10 +36,21 @@ const Board: NextPage = () => {
 
     const somePlayerAlreadyHavePlayInThisBoard = (!!adversary?.plays[index] || !!currentPlayer?.plays[index])
 
-    const canChoose = currentTurn && !somePlayerAlreadyHavePlayInThisBoard
+    const canChoose = currentTurn && !somePlayerAlreadyHavePlayInThisBoard && !winner
+
+    const variant = 
+      winner?.plays[index] 
+      ? (mapTypeToVariant?.[winner?.type as keyof typeof mapTypeToVariant] || undefined) as Variants | undefined 
+      : undefined
+
 
     return (
-      <Styles.ButtonBoard key={index} onClick={() => canChoose && move(currentTurn?.id, index)}>
+      <Styles.ButtonBoard 
+        disabled={!canChoose} 
+        key={index}
+        variant={variant}
+        onClick={() => move(currentTurn?.id as string, index)}
+      >
         {type && <Icon name={type as any || 'x'} />}
       </Styles.ButtonBoard>
     )

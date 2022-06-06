@@ -5,6 +5,7 @@ export interface PlayerSchema {
   plays: string[];
   type?: string;
   isBot?: boolean;
+  wins?: number;
 }
 
 export type Player = Record<string, PlayerSchema>

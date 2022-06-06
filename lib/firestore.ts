@@ -6,6 +6,7 @@ import { app } from './firebase'
 
 import { CreatePlayer, Game, GameUpdateSchema, Player, PlayerUpdateSchema } from 'types/game'
 import { BOARD_POSITIONS } from 'constants/game'
+import { RiContactsBookLine } from '@meronex/icons/ri'
 
 export const firestore = getFirestore(app)
 

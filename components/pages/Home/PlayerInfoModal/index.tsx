@@ -24,8 +24,9 @@ function BasePlayerInfoModal ({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     toggleIsLoading()
+
     try {
-      addPlayer(nickName)
+      await addPlayer(nickName)
     } catch (err) {
       console.log(err)
     } finally {
