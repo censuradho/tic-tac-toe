@@ -31,6 +31,7 @@ type GameData = {
   wonSequence: number[];
   adversary?: PlayerSchema |null;
   data: Partial<GameSchema>;
+  storageGame: StorageGameSchema | null;
   currentTurn: PlayerSchema | null;
   move: (playerId: string, index: number) => Promise<void>
   resetGame: () => Promise<void>;
@@ -131,7 +132,7 @@ export function GameProvider ({ children }: GameProviderProps) {
       board
     })
 
-  }, [data?.board, data.game_id, data?.players, winner])
+  }, [adversary?.id, data?.board, data.game_id, data?.players, winner])
 
   const resetGame = useCallback(async () => {
     if (!data.game_id || !data?.players) return;
@@ -163,6 +164,7 @@ export function GameProvider ({ children }: GameProviderProps) {
         wonSequence,
         player,
         adversary,
+        storageGame,
         data,
         currentTurn,
         resetGame,

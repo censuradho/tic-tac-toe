@@ -63,7 +63,7 @@ export async function updatePlayer (gameId: string, playerId: string, payload: P
   const updatePlayer = {
     ...player,
     ...payload
-  }
+  } as PlayerSchema
 
   const updatePayload = {
     ...(players || {}),
@@ -73,6 +73,8 @@ export async function updatePlayer (gameId: string, playerId: string, payload: P
   await updateDoc(doc(firestore, 'games', gameId), { 
     players: updatePayload 
   });
+
+  return updatePlayer
 }
 
 export async function createPlayer (gameId: string, payload: CreatePlayer) {

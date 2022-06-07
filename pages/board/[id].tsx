@@ -10,9 +10,10 @@ import { useGameContext } from "context"
 import * as DefaultStyles from 'styles/Default'
 import * as Styles from 'styles/Board'
 import { useCallback, useEffect } from "react"
-import { createPlayer, getGame } from "lib/firestore"
+import { createPlayer, getGame, updatePlayer } from "lib/firestore"
 import { useRouter } from "next/router"
 import { routePaths } from "constants/routes"
+import { PlayerSchema, StorageGameSchema } from "types/game"
 
 type Variants = VariantProps<typeof Styles.ButtonBoard>['variant']
 
@@ -20,7 +21,8 @@ const Board: NextPage = () => {
   const router = useRouter()
   const { id: gameId } = router.query
   const { 
-    player, 
+    player,
+    storageGame,
     adversary, 
     move, 
     currentTurn, 
@@ -43,53 +45,51 @@ const Board: NextPage = () => {
 
 
   const handleGetInitialState = useCallback(async () => {
-    if (player?.id || !gameId) return;
+    if (player?.id || !gameId || storageGame) return;
+
 
     const game = await getGame(gameId as string)
 
-    console.log(game)
     if (!game) router.push(routePaths.home)
 
-    const _player = await createPlayer(game.game_id, {
-      name: 'Player 2',
-      wins: 0,
-      type: adversary?.type === PLAYER_TYPES.x ? PLAYER_TYPES.o : PLAYER_TYPES.x
-    })
+    const storagePlayer = {} as StorageGameSchema
 
-    setStorageGame({
-      game_id: game.game_id,
-      player_id: _player.id,
-    })
+    const hasBotPlayer = Object.keys(game.players).length > 1
+
+    console.log(hasBotPlayer)
+    if (hasBotPlayer) {
+      const [_, botPlayer] = Object.entries(game.players).find(([key, value]) => value.isBot) as [string, PlayerSchema]
+      
+      const _player = await updatePlayer(game.game_id, botPlayer.id, {
+        isBot: false,
+        name: 'Player 2',
+      })
+
+      const newStoragePlayer: StorageGameSchema = {
+        game_id: game.game_id,
+        player_id: _player.id
+      }
+
+      Object.assign(storagePlayer, newStoragePlayer)
+    } else {
+      const _player = await createPlayer(game.game_id, {
+        name: 'Player 2',
+        wins: 0,
+        type: adversary?.type === PLAYER_TYPES.x ? PLAYER_TYPES.o : PLAYER_TYPES.x
+      })
+
+      const newStoragePlayer =  {
+        game_id: game.game_id,
+        player_id: _player.id,
+      }
+
+      Object.assign(storagePlayer, newStoragePlayer)
+    }
+
+    setStorageGame(storagePlayer)
   }, [adversary?.type, gameId, player?.id, router, setStorageGame])
 
   const currentTurnIcon = playerTypeIcon?.[currentTurn?.type as keyof typeof playerTypeIcon]
-
-  // const renderBoard = BOARD_POSITIONS.map((value, index) => {
-  //   const currentPlayerPlay = currentPlayer?.plays[index]
-  //   const adversaryPlay = adversary?.plays[index]
-
-  //   const type = playerTypeIcon[(currentPlayerPlay || adversaryPlay) || ''] || ''
-
-  //   const playerAlreadyHavePlayInThisBoard = (!!adversary?.plays[index] || !!currentPlayer?.plays[index])
-
-  //   const canChoose = currentTurn && !playerAlreadyHavePlayInThisBoard && !winner?.player
-
-  //   const variant = 
-  //     winner?.play.includes(index)
-  //       ? mapTypeToVariant(winner?.player?.type)
-  //       : undefined
-
-  //   return (
-  //     <Styles.ButtonBoard 
-  //       disabled={!canChoose} 
-  //       key={index}
-  //       variant={variant}
-  //       onClick={() => move(currentTurn?.id as string, index)}
-  //     >
-  //       {type && <Icon name={type as any || 'x'} />}
-  //     </Styles.ButtonBoard>
-  //   )
-  // })
 
   const renderBoard = data?.board?.map((value, index) => {
 
@@ -124,7 +124,7 @@ const Board: NextPage = () => {
               <Icon name="square" color="secondary" />
             </Flex>
             <Styles.Turn>
-              {/* {currentTurnIcon && <Icon name={currentTurnIcon} />} */}
+              {currentTurnIcon && <Icon name={currentTurnIcon} />}
               <span>{`${currentTurn?.name} turn`}</span>
             </Styles.Turn>
             <Styles.RestartButton onClick={resetGame}>
