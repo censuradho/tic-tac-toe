@@ -116,7 +116,7 @@ const Board: NextPage = () => {
     <DefaultStyles.Main>
       <DefaultStyles.Container>
         <Flex flexDirection="column" gap={3}>
-          <Flex justifyContent="space-between" alignItems="center">
+          <Flex justifyContent="space-between" alignItems="center" gap={1}>
             <Flex gap={0.5}>
               <Icon name="x" color="primary" />
               <Icon name="square" color="secondary" />

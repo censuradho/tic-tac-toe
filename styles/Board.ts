@@ -10,7 +10,9 @@ export const Turn = styled('div', {
   justifyContent: 'center',
   boxShadow: '$sm',
   gap: '1rem',
-  fontWeight: 600
+  fontWeight: 600,
+  fontSize: '$xs',
+  textAlign: 'center',
 })
 
 export const RestartButton = styled('button', {
@@ -88,6 +90,7 @@ export const Info = styled('div', {
   },
   color: '$background',
 
+  
   variants: {
     variant: {
       primary: {
