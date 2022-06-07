@@ -9,7 +9,7 @@ import { useGameContext } from "context"
 
 import * as DefaultStyles from 'styles/Default'
 import * as Styles from 'styles/Board'
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { createPlayer, getGame, updatePlayer } from "lib/firestore"
 import { useRouter } from "next/router"
 import { routePaths } from "constants/routes"
@@ -47,16 +47,15 @@ const Board: NextPage = () => {
   const handleGetInitialState = useCallback(async () => {
     if (player?.id || !gameId || storageGame) return;
 
-
     const game = await getGame(gameId as string)
 
     if (!game) router.push(routePaths.home)
 
     const storagePlayer = {} as StorageGameSchema
 
-    const hasBotPlayer = Object.keys(game.players).length > 1
+    const hasMoreThanOnePlayer = Object.keys(game.players).length > 1
 
-    if (hasBotPlayer) {
+    if (hasMoreThanOnePlayer) {
       const [_, botPlayer] = Object.entries(game.players).find(([key, value]) => value.isBot) as [string, PlayerSchema]
       
       const _player = await updatePlayer(game.game_id, botPlayer.id, {
@@ -90,7 +89,7 @@ const Board: NextPage = () => {
 
   const currentTurnIcon = playerTypeIcon?.[currentTurn?.type as keyof typeof playerTypeIcon]
 
-  const renderBoard = data?.board?.map((value, index) => {
+  const renderBoard = useMemo(() => data?.board?.map((value, index) => {
 
     const variant = wonSequence.includes(index) 
       ? mapTypeToVariant(winner?.type) 
@@ -106,7 +105,7 @@ const Board: NextPage = () => {
         {value && <Icon name={playerTypeIcon[value as keyof typeof playerTypeIcon] || 'restart'} />}
       </Styles.ButtonBoard>
     )
-  })
+  }), [currentTurn, data?.board, move, winner?.type, wonSequence])
 
   useEffect(() => {
     handleGetInitialState()
@@ -124,7 +123,7 @@ const Board: NextPage = () => {
             </Flex>
             <Styles.Turn>
               {currentTurnIcon && <Icon name={currentTurnIcon} />}
-              <span>{`${currentTurn?.name} turn`}</span>
+              <span>{currentTurn?.name && `${currentTurn?.name} turn`}</span>
             </Styles.Turn>
             <Styles.RestartButton onClick={resetGame}>
               <Icon name="restart" color="background" />
@@ -143,7 +142,7 @@ const Board: NextPage = () => {
               {player?.wins}
             </Styles.Info>
             <Styles.Info variant={mapTypeToVariant(adversary?.type)}>
-              <span>{`${player?.type} ${adversary?.name}`}</span>
+              <span>{`${adversary?.type} ${adversary?.name}`}</span>
               {adversary?.wins}
             </Styles.Info>
           </Grid>

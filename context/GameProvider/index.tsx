@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { v4 as uuid } from 'uuid'
 
-import { BOARD_POSITIONS, WIN_COMBOS } from 'constants/game'
+import { BOARD_POSITIONS, PLAYER_TYPES, WIN_COMBOS } from 'constants/game'
 
 import type { 
   CurrentPlayer, 
@@ -24,6 +24,7 @@ import type {
 import { PlayerInfoModal } from 'components/pages'
 import { createGame, createPlayer, updateGame, updatePlayer } from 'lib/firestore'
 import { useFirestore, useLocalStorage } from 'hooks'
+import { getWinnerSequence } from 'utils/helpers'
 
 type GameData = {
   player?: PlayerSchema | null;
@@ -110,15 +111,16 @@ export function GameProvider ({ children }: GameProviderProps) {
     return won
   }, [data?.board, data?.players])
 
-  const wonSequence = useMemo(() => {
-    return WIN_COMBOS.find(combo => {
-      const match = combo.every(cell => data?.board?.[cell] === winner?.type)
-      return match
-    }) || []
-  }, [data?.board, winner?.type])
+  const wonSequence = useMemo(() => 
+    winner?.type 
+      ? getWinnerSequence(data?.board || [], winner?.type) 
+      : []
+  , [data?.board, winner?.type])
   
   const move = useCallback(async (playerId: string, index: number) => {
-    if (!data.game_id || !!winner || !adversary?.id || currentTurn?.id !== player?.id) return;
+    const isAdversaryPlayer = !currentTurn?.isBot && currentTurn?.id === adversary?.id
+
+    if (!data.game_id || !!winner || !adversary?.id || isAdversaryPlayer) return;
 
     const currentPlayer = data?.players?.[playerId]
     const alreadyMoved = data?.board?.[index]
@@ -131,7 +133,7 @@ export function GameProvider ({ children }: GameProviderProps) {
       board
     })
 
-  }, [adversary?.id, currentTurn?.id, data?.board, data.game_id, data?.players, player?.id, winner])
+  }, [adversary?.id, currentTurn?.id, currentTurn?.isBot, data?.board, data.game_id, data?.players, winner])
 
   const resetGame = useCallback(async () => {
     if (!data.game_id || !data?.players) return;
@@ -155,6 +157,73 @@ export function GameProvider ({ children }: GameProviderProps) {
     
   }, [data.game_id, data?.players, winner?.id])
 
+  const minMaxAlgorithm = (board: string[], player: string, me: PlayerSchema, maxDepth = 9) => {
+    const meWinner = getWinnerSequence(board, me.type as string).length > 0
+    const playerWinner = getWinnerSequence(board, player).length > 0
+
+    const isFull = board.filter(value => !value).length === 0
+
+    const moves = board
+      .map((value, index) => !value ? index : null)
+      .filter(value => value) as number[]
+
+    if (meWinner) return 1
+    if (playerWinner && !isFull) return -1
+    if (isFull) return 0
+
+    if (player === me?.type) { //MAX
+      let best = -Infinity
+
+      moves.forEach(move => {
+        const newBoard = board.map((value, cell) => move === cell ? (player) : value)
+        const value = minMaxAlgorithm(newBoard, player === PLAYER_TYPES.x ? PLAYER_TYPES.o : PLAYER_TYPES.x, me)
+        
+        if (value > best) {
+          best = value
+          return move
+        }
+      })
+
+    return best
+
+    } else { // MIN
+      let best = Infinity
+
+      moves.forEach(move => {
+        const newBoard = board.map((value, cell) => move === cell ? (player) : value)
+        const value = minMaxAlgorithm(newBoard, player === PLAYER_TYPES.x ? PLAYER_TYPES.o : PLAYER_TYPES.x, me)
+        
+        if (value < best) {
+          best = value
+          return move
+        }
+      })
+
+      return best
+    }
+  }
+
+  
+    const bestAction = (board: string[], me: PlayerSchema) => {
+      const moves = board
+        .map((value, index) => !value ? index : null)
+        .filter(value => value) as number[]
+
+      let best = -Infinity
+
+      const bestAction = moves.find(move => {
+        const newBoard = board.map((value, cell) => move === cell ? (me.type as string) : value)
+
+        const value = minMaxAlgorithm(newBoard, (me?.type as string), me)
+
+        if (value > best) {
+          best = value
+          return move
+        }
+      })
+
+      return bestAction
+  }
 
   return (
     <GameContext.Provider 
