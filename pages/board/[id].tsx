@@ -56,7 +56,6 @@ const Board: NextPage = () => {
 
     const hasBotPlayer = Object.keys(game.players).length > 1
 
-    console.log(hasBotPlayer)
     if (hasBotPlayer) {
       const [_, botPlayer] = Object.entries(game.players).find(([key, value]) => value.isBot) as [string, PlayerSchema]
       
@@ -87,7 +86,7 @@ const Board: NextPage = () => {
     }
 
     setStorageGame(storagePlayer)
-  }, [adversary?.type, gameId, player?.id, router, setStorageGame])
+  }, [adversary?.type, gameId, player?.id, router, setStorageGame, storageGame])
 
   const currentTurnIcon = playerTypeIcon?.[currentTurn?.type as keyof typeof playerTypeIcon]
 

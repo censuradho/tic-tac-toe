@@ -19,7 +19,7 @@ export const PLAYER_TYPES = {
   x: 'x',
 }
 
-export const playerTypeIcon: Record<keyof typeof PLAYER_TYPES, IconNames> = {
+export const playerTypeIcon: Record<string, IconNames> = {
   o: 'square',
   x: 'x'
 }

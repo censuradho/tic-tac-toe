@@ -95,7 +95,6 @@ export function GameProvider ({ children }: GameProviderProps) {
 
   }, [adversary, player, data])
 
-
   const winner = useMemo(() => {
     const players = Object.entries(data?.players || {}).map(([key, value]) => value)
 
@@ -119,7 +118,7 @@ export function GameProvider ({ children }: GameProviderProps) {
   }, [data?.board, winner?.type])
   
   const move = useCallback(async (playerId: string, index: number) => {
-    if (!data.game_id || !!winner || !adversary?.id) return;
+    if (!data.game_id || !!winner || !adversary?.id || currentTurn?.id !== player?.id) return;
 
     const currentPlayer = data?.players?.[playerId]
     const alreadyMoved = data?.board?.[index]
@@ -132,7 +131,7 @@ export function GameProvider ({ children }: GameProviderProps) {
       board
     })
 
-  }, [adversary?.id, data?.board, data.game_id, data?.players, winner])
+  }, [adversary?.id, currentTurn?.id, data?.board, data.game_id, data?.players, player?.id, winner])
 
   const resetGame = useCallback(async () => {
     if (!data.game_id || !data?.players) return;
