@@ -41,7 +41,7 @@ const Home: NextPage = () => {
       })
 
       await createPlayer(game.game_id, {
-        name: 'Player 2 (CPU)',
+        name: 'Player 2',
         wins: 0,
         isBot: true,
         type: playerType === 'o' ? 'x' : 'o'
@@ -91,17 +91,18 @@ const Home: NextPage = () => {
             flexDirection="column"
             gap={1}
           >
-            <Button
+            {/* <Button
               variant="secondary"
               fullWidth
               disabled={!playerType}
               onClick={handleCreateVSCPU}
             >
               New game (vs cpu)
-            </Button>
+            </Button> */}
             <Button
               disabled={!playerType}
               fullWidth
+              onClick={handleCreateVSCPU}
             >
               New game (vs player)
             </Button>
