@@ -13,6 +13,27 @@ export const Turn = styled('div', {
   fontWeight: 600,
   fontSize: '$xs',
   textAlign: 'center',
+
+  variants: {
+    variants: {
+      primary: {
+        'span': {
+          color: '$primary'
+        },
+        'svg': {
+          fill: '$primary'
+        }
+      },
+      secondary: {
+        'span': {
+          color: '$secondary'
+        },
+        'svg': {
+          fill: '$secondary'
+        }
+      }
+    }
+  }
 })
 
 export const RestartButton = styled('button', {

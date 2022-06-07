@@ -107,10 +107,19 @@ const Board: NextPage = () => {
     )
   }), [currentTurn, data?.board, move, winner?.type, wonSequence])
 
+  const info = winner ? (
+    <span>{winner?.name && `${winner?.name} winner`}</span>
+  ) : (
+    <>
+      {currentTurnIcon && <Icon name={currentTurnIcon} />}
+      <span>{currentTurn?.name && `${currentTurn?.name} turn`}</span>
+    </>
+  )
   useEffect(() => {
     handleGetInitialState()
   }, [handleGetInitialState])
 
+  console.log(winner)
 
   return (
     <DefaultStyles.Main>
@@ -121,9 +130,8 @@ const Board: NextPage = () => {
               <Icon name="x" color="primary" />
               <Icon name="square" color="secondary" />
             </Flex>
-            <Styles.Turn>
-              {currentTurnIcon && <Icon name={currentTurnIcon} />}
-              <span>{currentTurn?.name && `${currentTurn?.name} turn`}</span>
+            <Styles.Turn variants={winner?.type ? (winner.type === PLAYER_TYPES.x ? 'secondary' : 'primary') : undefined}>
+             {info}
             </Styles.Turn>
             <Styles.RestartButton onClick={resetGame}>
               <Icon name="restart" color="background" />

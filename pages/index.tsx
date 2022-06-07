@@ -18,6 +18,7 @@ import { routePaths } from 'constants/routes'
 import { resolvePath } from 'utils/helpers'
 import { useState } from 'react'
 import { PLAYER_TYPES } from 'constants/game'
+import { useBooleanToggle } from 'hooks'
 
 const Home: NextPage = () => {
   const { 
@@ -25,6 +26,7 @@ const Home: NextPage = () => {
     adversary, 
     setStorageGame 
   } = useGameContext()
+  const [isLoading, toggleIsLoading] = useBooleanToggle(false)
 
   const [playerType, setPlayerType] = useState(player?.type || 'x')
 
@@ -32,6 +34,7 @@ const Home: NextPage = () => {
 
   const handleCreateVSCPU = async () => {
     try {
+      toggleIsLoading()
       const game = await createGame()
 
       const _player = await createPlayer(game.game_id, {
@@ -58,6 +61,8 @@ const Home: NextPage = () => {
 
     } catch (err) {
       console.log(err)
+    } finally {
+      toggleIsLoading()
     }
   }
 
@@ -100,7 +105,7 @@ const Home: NextPage = () => {
               New game (vs cpu)
             </Button> */}
             <Button
-              disabled={!playerType}
+              disabled={!playerType || isLoading}
               fullWidth
               onClick={handleCreateVSCPU}
             >
